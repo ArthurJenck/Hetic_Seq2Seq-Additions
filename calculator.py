@@ -232,4 +232,34 @@ class Calculator:
         )
         
         print("✓ Modèle décodeur d'inférence créé")
+    
+    def decode_sequence(self, input_seq: Array) -> str:
+        states_value = self.encoder_model.predict(input_seq, verbose=0)
+        
+        target_seq = np.zeros((1, 1, self.VOCAB_SIZE))
+        target_seq[0, 0, self.char_to_idx['\t']] = 1.0
+        
+        stop_condition = False
+        decoded_sentence = ''
+        
+        while not stop_condition:
+            output_tokens, h, c = self.decoder_model.predict(
+                [target_seq] + states_value,
+                verbose=0
+            )
+            
+            sampled_token_index = np.argmax(output_tokens[0, -1, :])
+            sampled_char = self.idx_to_char[sampled_token_index]
+            
+            decoded_sentence += sampled_char
+            
+            if sampled_char == '\n' or len(decoded_sentence) >= self.MAX_LEN_OUT:
+                stop_condition = True
+            
+            target_seq = np.zeros((1, 1, self.VOCAB_SIZE))
+            target_seq[0, 0, sampled_token_index] = 1.0
+            
+            states_value = [h, c]
+        
+        return decoded_sentence.replace('\n', '')
 

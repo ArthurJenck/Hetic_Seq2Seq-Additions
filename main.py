@@ -27,6 +27,10 @@ if __name__ == "__main__":
     for a, b in test_cases:
         calc.test_addition(a, b)
     
+    print("\n=== MODE INTERACTIF ===")
+    print("Entrez des additions (format: 12+34) ou 'q' pour quitter")
+    calc.interactive_test()
+    
     print("\n" + "="*70)
     print("✓ Script terminé avec succès!")
     print("="*70)

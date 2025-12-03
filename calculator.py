@@ -356,4 +356,43 @@ class Calculator:
         is_correct = (prediction.strip() == true_result)
         symbol = "✓" if is_correct else "✗"
         print(f"{a:02d} + {b:02d} = {prediction.strip():4s} (attendu: {true_result}) [{symbol}]")
+    
+    def interactive_test(self):
+        """Mode interactif permettant à l'utilisateur de tester des additions."""
+        while True:
+            try:
+                user_input = input("\nEntrez une addition (ex: 12+34) ou 'q' pour quitter: ").strip()
+                
+                if user_input.lower() in ['q', 'quit']:
+                    print("Au revoir !")
+                    break
+                
+                if '+' not in user_input:
+                    print("Format invalide. Utilisez le format: 12+34")
+                    continue
+                
+                parts = user_input.split('+')
+                if len(parts) != 2:
+                    print("Format invalide. Une seule addition à la fois.")
+                    continue
+                
+                try:
+                    a = int(parts[0].strip())
+                    b = int(parts[1].strip())
+                except ValueError:
+                    print("Erreur: les nombres doivent être des entiers.")
+                    continue
+                
+                max_val = 10**self.digits - 1
+                if a < 0 or a > max_val or b < 0 or b > max_val:
+                    print(f"Erreur: les nombres doivent être entre 0 et {max_val}.")
+                    continue
+                
+                self.test_addition(a, b)
+                
+            except KeyboardInterrupt:
+                print("\n\nInterruption. Au revoir !")
+                break
+            except Exception as e:
+                print(f"Erreur: {e}")
 

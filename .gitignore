@@ -205,3 +205,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ML Models and outputs
+*.keras
+*.png
+best_model.keras
+training_history.png

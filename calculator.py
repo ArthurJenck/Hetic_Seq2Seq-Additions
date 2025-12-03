@@ -38,6 +38,9 @@ class Calculator:
         
         self.history = None
         
+        self.encoder_model = None
+        self.decoder_model = None
+        
         print(f"TensorFlow version: {tf.__version__}")
     
     def generate_data(self) -> Tuple[List[str], List[str]]:
@@ -203,4 +206,30 @@ class Calculator:
         plt.savefig('training_history.png', dpi=150, bbox_inches='tight')
         print("✓ Graphiques sauvegardés dans 'training_history.png'")
         plt.show()
+    
+    def build_inference_models(self):
+        print("\n=== CRÉATION DES MODÈLES D'INFÉRENCE ===")
+        
+        self.encoder_model = Model(self.encoder_inputs, self.encoder_states, name='encoder_inference')
+        print("✓ Modèle encodeur d'inférence créé")
+        
+        decoder_state_input_h = Input(shape=(self.latent_dim,), name='decoder_state_h')
+        decoder_state_input_c = Input(shape=(self.latent_dim,), name='decoder_state_c')
+        decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+        
+        decoder_outputs, state_h, state_c = self.decoder_lstm(
+            self.decoder_inputs,
+            initial_state=decoder_states_inputs
+        )
+        
+        decoder_states = [state_h, state_c]
+        decoder_outputs = self.decoder_dense(decoder_outputs)
+        
+        self.decoder_model = Model(
+            [self.decoder_inputs] + decoder_states_inputs,
+            [decoder_outputs] + decoder_states,
+            name='decoder_inference'
+        )
+        
+        print("✓ Modèle décodeur d'inférence créé")
 

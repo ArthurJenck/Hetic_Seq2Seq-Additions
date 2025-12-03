@@ -10,4 +10,5 @@ if __name__ == "__main__":
     calc.build_model()
     calc.train()
     calc.plot_training_history()
+    calc.build_inference_models()
 

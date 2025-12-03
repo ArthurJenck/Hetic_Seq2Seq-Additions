@@ -18,6 +18,13 @@ class Calculator:
         self.inputs = None
         self.targets = None
         
+        self.MAX_LEN_IN = digits * 2 + 1
+        self.MAX_LEN_OUT = digits * 2
+        
+        self.char_to_idx = None
+        self.idx_to_char = None
+        self.VOCAB_SIZE = None
+        
         print(f"TensorFlow version: {tf.__version__}")
     
     def generate_data(self) -> Tuple[List[str], List[str]]:
@@ -47,4 +54,23 @@ class Calculator:
             print(f"Exemple {i+1}: '{inp_str}' → '{tgt_str}'")
         
         return inputs, targets
+    
+    def build_vocabulary(self):
+        all_chars = set()
+        for inp in self.inputs:
+            all_chars.update([chr(x) for x in inp])
+        for tgt in self.targets:
+            all_chars.update([chr(x) for x in tgt])
+        
+        chars = sorted(list(all_chars))
+        
+        self.char_to_idx = {c: i for i, c in enumerate(['\t'] + chars + ['\n'])}
+        self.idx_to_char = {i: c for c, i in self.char_to_idx.items()}
+        self.VOCAB_SIZE = len(self.char_to_idx)
+        
+        print(f"\n=== VOCABULAIRE ===")
+        print(f"Taille du vocabulaire: {self.VOCAB_SIZE} caractères")
+        print(f"Caractères: {chars}")
+        print(f"Mapping exemple: '0' → index {self.char_to_idx['0']}")
+        print(f"Tokens spéciaux: START='\\t' (idx {self.char_to_idx[chr(9)]}), END='\\n' (idx {self.char_to_idx[chr(10)]})")
 

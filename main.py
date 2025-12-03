@@ -6,4 +6,5 @@ if __name__ == "__main__":
     
     calc.generate_data()
     calc.build_vocabulary()
+    calc.prepare_training_data()
 

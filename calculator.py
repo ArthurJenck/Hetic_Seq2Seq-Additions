@@ -25,6 +25,10 @@ class Calculator:
         self.idx_to_char = None
         self.VOCAB_SIZE = None
         
+        self.encoder_input_data = None
+        self.decoder_input_data = None
+        self.decoder_target_data = None
+        
         print(f"TensorFlow version: {tf.__version__}")
     
     def generate_data(self) -> Tuple[List[str], List[str]]:
@@ -73,4 +77,35 @@ class Calculator:
         print(f"Caractères: {chars}")
         print(f"Mapping exemple: '0' → index {self.char_to_idx['0']}")
         print(f"Tokens spéciaux: START='\\t' (idx {self.char_to_idx[chr(9)]}), END='\\n' (idx {self.char_to_idx[chr(10)]})")
+    
+    def prepare_data(self, seqs: List[str], max_len: int) -> Array:
+        X = np.zeros((len(seqs), max_len, self.VOCAB_SIZE), dtype=np.float32)
+        
+        for i, seq in enumerate(seqs):
+            for t, char_code in enumerate(seq):
+                if t < max_len:
+                    char = chr(char_code)
+                    if char in self.char_to_idx:
+                        char_idx = self.char_to_idx[char]
+                        X[i, t, char_idx] = 1.0
+        
+        return X
+    
+    def prepare_training_data(self):
+        print("\n=== PRÉPARATION DES DONNÉES ===")
+        
+        self.encoder_input_data = self.prepare_data(self.inputs, self.MAX_LEN_IN)
+        
+        decoder_input_seqs = []
+        for tgt in self.targets:
+            decoder_input = [ord('\t')] + tgt[:-1]
+            decoder_input_seqs.append(decoder_input)
+        
+        self.decoder_input_data = self.prepare_data(decoder_input_seqs, self.MAX_LEN_OUT)
+        self.decoder_target_data = self.prepare_data(self.targets, self.MAX_LEN_OUT)
+        
+        print(f"Shape encoder_input_data: {self.encoder_input_data.shape}")
+        print(f"  → (n_samples={self.encoder_input_data.shape[0]}, timesteps={self.encoder_input_data.shape[1]}, vocab={self.encoder_input_data.shape[2]})")
+        print(f"Shape decoder_input_data: {self.decoder_input_data.shape}")
+        print(f"Shape decoder_target_data: {self.decoder_target_data.shape}")
 

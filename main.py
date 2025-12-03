@@ -13,9 +13,21 @@ if __name__ == "__main__":
     calc.plot_training_history()
     calc.build_inference_models()
     
-    print("\n=== TEST DÉCODAGE ===")
-    test_seq = calc.encoder_input_data[0:1]
-    result = calc.decode_sequence(test_seq)
-    original = ''.join([calc.idx_to_char[np.argmax(x)] for x in test_seq[0] if np.max(x) > 0])
-    print(f"Test: '{original}' → '{result}'")
+    calc.evaluate_samples(n_samples=20)
+    
+    print("\n=== TEST SUR DE NOUVELLES ADDITIONS ===")
+    test_cases = [
+        (15, 27),
+        (99, 1),
+        (0, 0),
+        (50, 50),
+        (12, 88),
+    ]
+    
+    for a, b in test_cases:
+        calc.test_addition(a, b)
+    
+    print("\n" + "="*70)
+    print("✓ Script terminé avec succès!")
+    print("="*70)
 

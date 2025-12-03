@@ -262,4 +262,57 @@ class Calculator:
             states_value = [h, c]
         
         return decoded_sentence.replace('\n', '')
+    
+    def evaluate_samples(self, n_samples: int = 20):
+        print("\n=== ÉVALUATION SUR DES EXEMPLES ===")
+        print("Format: Input → Prédiction (Vérité terrain) [✓/✗]\n")
+        
+        correct = 0
+        
+        for seq_index in range(n_samples):
+            input_seq = self.encoder_input_data[seq_index:seq_index+1]
+            
+            original = ''.join([
+                self.idx_to_char[np.argmax(x)]
+                for x in input_seq[0]
+                if np.max(x) > 0
+            ])
+            
+            decoded = self.decode_sequence(input_seq)
+            
+            target = ''.join([
+                self.idx_to_char[np.argmax(x)]
+                for x in self.decoder_target_data[seq_index]
+                if np.max(x) > 0
+            ])
+            
+            is_correct = (decoded.strip() == target.strip())
+            if is_correct:
+                correct += 1
+            
+            symbol = "✓" if is_correct else "✗"
+            print(f"{seq_index+1:2d}. Input: {original:8s} → Pred: {decoded:6s} (True: {target:6s}) [{symbol}]")
+        
+        accuracy = (correct / n_samples) * 100
+        print(f"\n{'='*70}")
+        print(f"ACCURACY: {correct}/{n_samples} = {accuracy:.1f}%")
+        print(f"{'='*70}")
+    
+    def test_addition(self, a: int, b: int):
+        inp = f"{a:0{self.digits}d}+{b:0{self.digits}d}"
+        input_codes = [ord(c) for c in inp]
+        
+        input_seq = np.zeros((1, self.MAX_LEN_IN, self.VOCAB_SIZE))
+        for t, code in enumerate(input_codes):
+            if t < self.MAX_LEN_IN:
+                char = chr(code)
+                if char in self.char_to_idx:
+                    input_seq[0, t, self.char_to_idx[char]] = 1.0
+        
+        prediction = self.decode_sequence(input_seq)
+        true_result = f"{a+b:0{self.digits*2}d}"
+        
+        is_correct = (prediction.strip() == true_result)
+        symbol = "✓" if is_correct else "✗"
+        print(f"{a:02d} + {b:02d} = {prediction.strip():4s} (attendu: {true_result}) [{symbol}]")
 

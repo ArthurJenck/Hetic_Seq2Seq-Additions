@@ -29,6 +29,13 @@ class Calculator:
         self.decoder_input_data = None
         self.decoder_target_data = None
         
+        self.model = None
+        self.encoder_inputs = None
+        self.encoder_states = None
+        self.decoder_inputs = None
+        self.decoder_lstm = None
+        self.decoder_dense = None
+        
         print(f"TensorFlow version: {tf.__version__}")
     
     def generate_data(self) -> Tuple[List[str], List[str]]:
@@ -108,4 +115,34 @@ class Calculator:
         print(f"  → (n_samples={self.encoder_input_data.shape[0]}, timesteps={self.encoder_input_data.shape[1]}, vocab={self.encoder_input_data.shape[2]})")
         print(f"Shape decoder_input_data: {self.decoder_input_data.shape}")
         print(f"Shape decoder_target_data: {self.decoder_target_data.shape}")
+    
+    def build_model(self):
+        print("\n=== CONSTRUCTION DU MODÈLE ===")
+        
+        self.encoder_inputs = Input(shape=(None, self.VOCAB_SIZE), name='encoder_input')
+        encoder_lstm = LSTM(self.latent_dim, return_state=True, name='encoder_lstm')
+        encoder_outputs, state_h, state_c = encoder_lstm(self.encoder_inputs)
+        self.encoder_states = [state_h, state_c]
+        
+        print(f"✓ Encodeur créé: LSTM avec {self.latent_dim} unités")
+        
+        self.decoder_inputs = Input(shape=(None, self.VOCAB_SIZE), name='decoder_input')
+        self.decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, name='decoder_lstm')
+        decoder_outputs, _, _ = self.decoder_lstm(self.decoder_inputs, initial_state=self.encoder_states)
+        
+        self.decoder_dense = Dense(self.VOCAB_SIZE, activation='softmax', name='decoder_output')
+        decoder_outputs = self.decoder_dense(decoder_outputs)
+        
+        print(f"✓ Décodeur créé: LSTM {self.latent_dim} unités + Dense {self.VOCAB_SIZE} sorties")
+        
+        self.model = Model([self.encoder_inputs, self.decoder_inputs], decoder_outputs, name='seq2seq_training')
+        
+        self.model.compile(
+            optimizer='adam',
+            loss='categorical_crossentropy',
+            metrics=['accuracy']
+        )
+        
+        print("\n=== ARCHITECTURE DU MODÈLE ===")
+        self.model.summary()
 

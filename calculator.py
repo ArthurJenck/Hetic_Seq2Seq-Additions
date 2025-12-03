@@ -5,7 +5,7 @@ import numpy as np
 from numpy import array as Array
 import tensorflow as tf
 from keras.layers import Input, LSTM, Dense
-from keras.models import Model
+from keras.models import Model, load_model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 import matplotlib.pyplot as plt
 from typing import List, Tuple
@@ -141,32 +141,50 @@ class Calculator:
         """Construit l'architecture encodeur-décodeur LSTM et compile le modèle."""
         print("\n=== CONSTRUCTION DU MODÈLE ===")
         
-        self.encoder_inputs = Input(shape=(None, self.VOCAB_SIZE), name='encoder_input')
-        encoder_lstm = LSTM(self.latent_dim, return_state=True, name='encoder_lstm')
-        encoder_outputs, state_h, state_c = encoder_lstm(self.encoder_inputs)
-        self.encoder_states = [state_h, state_c]
-        
-        print(f"✓ Encodeur créé: LSTM avec {self.latent_dim} unités")
-        
-        self.decoder_inputs = Input(shape=(None, self.VOCAB_SIZE), name='decoder_input')
-        self.decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, name='decoder_lstm')
-        decoder_outputs, _, _ = self.decoder_lstm(self.decoder_inputs, initial_state=self.encoder_states)
-        
-        self.decoder_dense = Dense(self.VOCAB_SIZE, activation='softmax', name='decoder_output')
-        decoder_outputs = self.decoder_dense(decoder_outputs)
-        
-        print(f"✓ Décodeur créé: LSTM {self.latent_dim} unités + Dense {self.VOCAB_SIZE} sorties")
-        
-        self.model = Model([self.encoder_inputs, self.decoder_inputs], decoder_outputs, name='seq2seq_training')
-        
-        self.model.compile(
-            optimizer='adam',
-            loss='categorical_crossentropy',
-            metrics=['accuracy']
-        )
-        
-        print("\n=== ARCHITECTURE DU MODÈLE ===")
-        self.model.summary()
+        if os.path.exists('best_model.keras'):
+            print("✓ Chargement du modèle existant : best_model.keras")
+            self.model = load_model('best_model.keras')
+            
+            self.encoder_inputs = self.model.input[0]
+            self.decoder_inputs = self.model.input[1]
+            
+            encoder_lstm_layer = self.model.get_layer('encoder_lstm')
+            self.encoder_states = encoder_lstm_layer.output[1:]
+            
+            self.decoder_lstm = self.model.get_layer('decoder_lstm')
+            self.decoder_dense = self.model.get_layer('decoder_output')
+            
+            print("\n=== ARCHITECTURE DU MODÈLE ===")
+            self.model.summary()
+        else:
+            print("✓ Création d'un nouveau modèle")
+            
+            self.encoder_inputs = Input(shape=(None, self.VOCAB_SIZE), name='encoder_input')
+            encoder_lstm = LSTM(self.latent_dim, return_state=True, name='encoder_lstm')
+            encoder_outputs, state_h, state_c = encoder_lstm(self.encoder_inputs)
+            self.encoder_states = [state_h, state_c]
+            
+            print(f"✓ Encodeur créé: LSTM avec {self.latent_dim} unités")
+            
+            self.decoder_inputs = Input(shape=(None, self.VOCAB_SIZE), name='decoder_input')
+            self.decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, name='decoder_lstm')
+            decoder_outputs, _, _ = self.decoder_lstm(self.decoder_inputs, initial_state=self.encoder_states)
+            
+            self.decoder_dense = Dense(self.VOCAB_SIZE, activation='softmax', name='decoder_output')
+            decoder_outputs = self.decoder_dense(decoder_outputs)
+            
+            print(f"✓ Décodeur créé: LSTM {self.latent_dim} unités + Dense {self.VOCAB_SIZE} sorties")
+            
+            self.model = Model([self.encoder_inputs, self.decoder_inputs], decoder_outputs, name='seq2seq_training')
+            
+            self.model.compile(
+                optimizer='adam',
+                loss='categorical_crossentropy',
+                metrics=['accuracy']
+            )
+            
+            print("\n=== ARCHITECTURE DU MODÈLE ===")
+            self.model.summary()
     
     def train(self, batch_size: int = 64, validation_split: float = 0.2):
         """Entraîne le modèle avec EarlyStopping et sauvegarde du meilleur modèle."""

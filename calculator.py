@@ -13,6 +13,15 @@ from typing import List, Tuple
 
 class Calculator:
     def __init__(self, n_samples: int = 50000, digits: int = 2, latent_dim: int = 256, epochs: int = 50):
+        """
+        Initialise le modèle Seq2Seq pour l'addition de nombres.
+        
+        Args:
+            n_samples: Nombre d'exemples d'additions à générer
+            digits: Nombre de chiffres par nombre (2 = additions de 00 à 99)
+            latent_dim: Dimension de l'espace latent des LSTM
+            epochs: Nombre d'époques d'entraînement
+        """
         self.n_samples = n_samples
         self.digits = digits
         self.latent_dim = latent_dim
@@ -47,6 +56,7 @@ class Calculator:
         print(f"TensorFlow version: {tf.__version__}")
     
     def generate_data(self) -> Tuple[List[str], List[str]]:
+        """Génère des paires d'additions aléatoires et leurs résultats en codes ASCII."""
         inputs, targets = [], []
         
         for _ in range(self.n_samples):
@@ -75,6 +85,7 @@ class Calculator:
         return inputs, targets
     
     def build_vocabulary(self):
+        """Construit le vocabulaire avec tokens START (\\t) et END (\\n)."""
         all_chars = set()
         for inp in self.inputs:
             all_chars.update([chr(x) for x in inp])
@@ -94,6 +105,7 @@ class Calculator:
         print(f"Tokens spéciaux: START='\\t' (idx {self.char_to_idx[chr(9)]}), END='\\n' (idx {self.char_to_idx[chr(10)]})")
     
     def prepare_data(self, seqs: List[str], max_len: int) -> Array:
+        """Encode les séquences en matrices one-hot (n_samples, max_len, vocab_size)."""
         X = np.zeros((len(seqs), max_len, self.VOCAB_SIZE), dtype=np.float32)
         
         for i, seq in enumerate(seqs):
@@ -107,6 +119,7 @@ class Calculator:
         return X
     
     def prepare_training_data(self):
+        """Prépare les 3 matrices : encoder_input, decoder_input (avec START), decoder_target."""
         print("\n=== PRÉPARATION DES DONNÉES ===")
         
         self.encoder_input_data = self.prepare_data(self.inputs, self.MAX_LEN_IN)
@@ -125,6 +138,7 @@ class Calculator:
         print(f"Shape decoder_target_data: {self.decoder_target_data.shape}")
     
     def build_model(self):
+        """Construit l'architecture encodeur-décodeur LSTM et compile le modèle."""
         print("\n=== CONSTRUCTION DU MODÈLE ===")
         
         self.encoder_inputs = Input(shape=(None, self.VOCAB_SIZE), name='encoder_input')
@@ -155,6 +169,7 @@ class Calculator:
         self.model.summary()
     
     def train(self, batch_size: int = 64, validation_split: float = 0.2):
+        """Entraîne le modèle avec EarlyStopping et sauvegarde du meilleur modèle."""
         print("\n=== ENTRAÎNEMENT ===")
         
         callbacks = [
@@ -185,6 +200,7 @@ class Calculator:
         print("\n✓ Entraînement terminé!")
     
     def plot_training_history(self):
+        """Génère et sauvegarde les courbes de loss et accuracy."""
         print("\n=== VISUALISATION ===")
         
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
@@ -211,6 +227,7 @@ class Calculator:
         plt.show()
     
     def build_inference_models(self):
+        """Crée les modèles séparés pour l'inférence (encodeur et décodeur)."""
         print("\n=== CRÉATION DES MODÈLES D'INFÉRENCE ===")
         
         self.encoder_model = Model(self.encoder_inputs, self.encoder_states, name='encoder_inference')
@@ -237,6 +254,7 @@ class Calculator:
         print("✓ Modèle décodeur d'inférence créé")
     
     def decode_sequence(self, input_seq: Array) -> str:
+        """Décode une séquence en générant le résultat token par token (greedy)."""
         states_value = self.encoder_model.predict(input_seq, verbose=0)
         
         target_seq = np.zeros((1, 1, self.VOCAB_SIZE))
@@ -267,6 +285,7 @@ class Calculator:
         return decoded_sentence.replace('\n', '')
     
     def evaluate_samples(self, n_samples: int = 20):
+        """Évalue le modèle sur N exemples du dataset et calcule l'accuracy."""
         print("\n=== ÉVALUATION SUR DES EXEMPLES ===")
         print("Format: Input → Prédiction (Vérité terrain) [✓/✗]\n")
         
@@ -302,6 +321,7 @@ class Calculator:
         print(f"{'='*70}")
     
     def test_addition(self, a: int, b: int):
+        """Teste le modèle sur une addition spécifique a + b."""
         inp = f"{a:0{self.digits}d}+{b:0{self.digits}d}"
         input_codes = [ord(c) for c in inp]
         

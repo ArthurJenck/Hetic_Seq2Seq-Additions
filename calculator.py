@@ -36,6 +36,8 @@ class Calculator:
         self.decoder_lstm = None
         self.decoder_dense = None
         
+        self.history = None
+        
         print(f"TensorFlow version: {tf.__version__}")
     
     def generate_data(self) -> Tuple[List[str], List[str]]:
@@ -145,4 +147,34 @@ class Calculator:
         
         print("\n=== ARCHITECTURE DU MODÈLE ===")
         self.model.summary()
+    
+    def train(self, batch_size: int = 64, validation_split: float = 0.2):
+        print("\n=== ENTRAÎNEMENT ===")
+        
+        callbacks = [
+            EarlyStopping(
+                monitor='val_loss',
+                patience=5,
+                restore_best_weights=True,
+                verbose=1
+            ),
+            ModelCheckpoint(
+                'best_model.keras',
+                monitor='val_loss',
+                save_best_only=True,
+                verbose=1
+            )
+        ]
+        
+        self.history = self.model.fit(
+            [self.encoder_input_data, self.decoder_input_data],
+            self.decoder_target_data,
+            batch_size=batch_size,
+            epochs=self.epochs,
+            validation_split=validation_split,
+            callbacks=callbacks,
+            verbose=1
+        )
+        
+        print("\n✓ Entraînement terminé!")
 

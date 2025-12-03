@@ -8,4 +8,5 @@ if __name__ == "__main__":
     calc.build_vocabulary()
     calc.prepare_training_data()
     calc.build_model()
+    calc.train()
 

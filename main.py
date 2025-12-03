@@ -9,4 +9,5 @@ if __name__ == "__main__":
     calc.prepare_training_data()
     calc.build_model()
     calc.train()
+    calc.plot_training_history()
 

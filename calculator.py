@@ -177,4 +177,30 @@ class Calculator:
         )
         
         print("\n✓ Entraînement terminé!")
+    
+    def plot_training_history(self):
+        print("\n=== VISUALISATION ===")
+        
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+        
+        ax1.plot(self.history.history['loss'], label='Loss (train)', linewidth=2)
+        ax1.plot(self.history.history['val_loss'], label='Loss (validation)', linewidth=2)
+        ax1.set_xlabel('Epoch')
+        ax1.set_ylabel('Loss')
+        ax1.set_title('Évolution de la Loss')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+        
+        ax2.plot(self.history.history['accuracy'], label='Accuracy (train)', linewidth=2)
+        ax2.plot(self.history.history['val_accuracy'], label='Accuracy (validation)', linewidth=2)
+        ax2.set_xlabel('Epoch')
+        ax2.set_ylabel('Accuracy')
+        ax2.set_title("Évolution de l'Accuracy")
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        plt.savefig('training_history.png', dpi=150, bbox_inches='tight')
+        print("✓ Graphiques sauvegardés dans 'training_history.png'")
+        plt.show()
 
